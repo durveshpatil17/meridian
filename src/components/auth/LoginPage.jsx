@@ -6,7 +6,7 @@ export const LoginPage = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
-  const { signIn } = useAuth();
+  const { signIn, signInWithGoogle } = useAuth();
   const navigate = useNavigate();
 
   const handleLogin = async () => {
@@ -33,6 +33,8 @@ export const LoginPage = () => {
           <input type="password" className="form-input" value={password} onChange={e => setPassword(e.target.value)} />
         </div>
         <button className="btn-primary mt-16" onClick={handleLogin}>Sign In</button>
+        <div className="text-center meta-text" style={{ margin: '8px 0' }}>or</div>
+        <button className="btn-primary" style={{ backgroundColor: '#fff', color: '#000', border: '1px solid var(--border)' }} onClick={signInWithGoogle}>Sign in with Google</button>
         <div className="text-center meta-text mt-8">
           Don't have an account? <Link to="/signup">Sign up</Link>
         </div>
