@@ -2,9 +2,11 @@ import { useAuth } from '../../context/AuthContext';
 import { useMeridian } from '../../context/MeridianContext';
 import { format } from 'date-fns';
 
+import { Link } from 'react-router-dom';
+
 export const Dashboard = () => {
   const { user } = useAuth();
-  const { deliverablesDueThisWeek, activePipelineCount, contentInDraftCount, thisWeekItems } = useMeridian();
+  const { deliverablesDueThisWeek, activePipelineCount, contentInDraftCount, awaitingReviewCount, thisWeekItems } = useMeridian();
 
   const getGreeting = () => {
     const hour = new Date().getHours();
@@ -34,6 +36,15 @@ export const Dashboard = () => {
           <div style={{ fontSize: '32px', fontWeight: 'bold' }}>{contentInDraftCount}</div>
         </div>
       </div>
+
+      {awaitingReviewCount > 0 && (
+        <Link to="/inbox" style={{ textDecoration: 'none' }}>
+          <div className="card" style={{ backgroundColor: '#fef3c7', borderColor: '#f59e0b', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span className="body-text" style={{ color: '#d97706', fontWeight: 600 }}>{awaitingReviewCount} documents awaiting review</span>
+            <span style={{ color: '#d97706' }}>→</span>
+          </div>
+        </Link>
+      )}
 
       <div>
         <div className="section-label mb-16">This Week</div>

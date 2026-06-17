@@ -10,6 +10,7 @@ import { Dashboard } from './components/dashboard/Dashboard';
 import { AcademicsView } from './components/academics/AcademicsView';
 import { PipelineView } from './components/pipeline/PipelineView';
 import { ContentView } from './components/content/ContentView';
+import { InboxView } from './components/inbox/InboxView';
 import { SettingsView } from './components/settings/SettingsView';
 
 import './styles/globals.css';
@@ -27,6 +28,7 @@ function App() {
             <Route path="academics" element={<AcademicsView />} />
             <Route path="pipeline" element={<PipelineView />} />
             <Route path="content" element={<ContentView />} />
+            <Route path="inbox" element={<InboxView />} />
             <Route path="settings" element={<SettingsView />} />
           </Route>
         </Routes>

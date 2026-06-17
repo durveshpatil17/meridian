@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { IconDashboard, IconAcademics, IconPipeline, IconContent, IconSettings, IconSun, IconMoon } from '../ui/Icons';
+import { IconDashboard, IconAcademics, IconPipeline, IconContent, IconSettings, IconSun, IconMoon, IconInbox } from '../ui/Icons';
 
 export const Sidebar = () => {
   const { user, signOut } = useAuth();
@@ -19,6 +19,7 @@ export const Sidebar = () => {
     { path: '/academics', icon: <IconAcademics />, title: 'Academics' },
     { path: '/pipeline', icon: <IconPipeline />, title: 'Pipeline' },
     { path: '/content', icon: <IconContent />, title: 'Content' },
+    { path: '/inbox', icon: <IconInbox />, title: 'Inbox' },
     { path: '/settings', icon: <IconSettings />, title: 'Settings' }
   ];
 

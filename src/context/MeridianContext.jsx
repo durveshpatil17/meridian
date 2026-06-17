@@ -12,6 +12,7 @@ export const MeridianProvider = ({ children }) => {
   const [pipelineItems, setPipelineItems] = useState([]);
   const [contentPieces, setContentPieces] = useState([]);
   const [chatMessages, setChatMessages] = useState([]);
+  const [documents, setDocuments] = useState([]);
   
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -19,8 +20,19 @@ export const MeridianProvider = ({ children }) => {
   useEffect(() => {
     if (user) {
       fetchAll();
+      const docSub = supabase.channel('documents_changes')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'documents', filter: `user_id=eq.${user.id}` }, payload => {
+          if (payload.eventType === 'INSERT') {
+            setDocuments(prev => [payload.new, ...prev]);
+          } else if (payload.eventType === 'UPDATE') {
+            setDocuments(prev => prev.map(d => d.id === payload.new.id ? payload.new : d));
+          } else if (payload.eventType === 'DELETE') {
+            setDocuments(prev => prev.filter(d => d.id !== payload.old.id));
+          }
+        }).subscribe();
+      return () => { supabase.removeChannel(docSub); };
     } else {
-      setCourses([]); setDeliverables([]); setPipelineItems([]); setContentPieces([]); setChatMessages([]);
+      setCourses([]); setDeliverables([]); setPipelineItems([]); setContentPieces([]); setChatMessages([]); setDocuments([]);
       setLoading(false);
     }
   }, [user]);
@@ -32,17 +44,19 @@ export const MeridianProvider = ({ children }) => {
         { data: cData, error: cErr },
         { data: dData, error: dErr },
         { data: pData, error: pErr },
-        { data: ctData, error: ctErr }
+        { data: ctData, error: ctErr },
+        { data: docData, error: docErr }
       ] = await Promise.all([
         supabase.from('courses').select('*').eq('user_id', user.id).order('created_at', { ascending: true }),
         supabase.from('deliverables').select('*').eq('user_id', user.id),
         supabase.from('pipeline_items').select('*').eq('user_id', user.id),
-        supabase.from('content_pieces').select('*').eq('user_id', user.id)
+        supabase.from('content_pieces').select('*').eq('user_id', user.id),
+        supabase.from('documents').select('*').eq('user_id', user.id).order('created_at', { ascending: false })
       ]);
 
-      if (cErr) throw cErr; if (dErr) throw dErr; if (pErr) throw pErr; if (ctErr) throw ctErr;
+      if (cErr) throw cErr; if (dErr) throw dErr; if (pErr) throw pErr; if (ctErr) throw ctErr; if (docErr) throw docErr;
 
-      setCourses(cData || []); setDeliverables(dData || []); setPipelineItems(pData || []); setContentPieces(ctData || []);
+      setCourses(cData || []); setDeliverables(dData || []); setPipelineItems(pData || []); setContentPieces(ctData || []); setDocuments(docData || []);
       await fetchChatHistory();
     } catch (err) {
       setError('Failed to fetch data: ' + err.message);
@@ -133,6 +147,7 @@ export const MeridianProvider = ({ children }) => {
   const deliverablesDueThisWeek = deliverables.filter(d => d.status !== 'submitted' && d.due_date && new Date(d.due_date) <= nextWeek);
   const activePipelineCount = pipelineItems.filter(p => p.stage !== 'closed').length;
   const contentInDraftCount = contentPieces.filter(c => c.stage === 'draft' || c.stage === 'review').length;
+  const awaitingReviewCount = documents.filter(d => d.status === 'extracted').length;
 
   const thisWeekItems = [
     ...deliverablesDueThisWeek.map(d => ({ ...d, engine: 'Academics', sortDate: new Date(d.due_date), displayDate: d.due_date, badgeText: d.status.replace('_', ' '), accentClass: 'var(--accent-academics)' })),
@@ -141,13 +156,13 @@ export const MeridianProvider = ({ children }) => {
   ].sort((a, b) => a.sortDate - b.sortDate);
 
   const value = {
-    courses, deliverables, pipelineItems, contentPieces, chatMessages,
+    courses, deliverables, pipelineItems, contentPieces, chatMessages, documents,
     loading, error, fetchAll, fetchChatHistory,
     addDeliverable, updateDeliverable, deleteDeliverable, cycleDeliverableStatus,
     addPipelineItem, updatePipelineItem, deletePipelineItem,
     addContentPiece, updateContentPiece, deleteContentPiece,
     addChatMessage,
-    deliverablesDueThisWeek, activePipelineCount, contentInDraftCount, thisWeekItems
+    deliverablesDueThisWeek, activePipelineCount, contentInDraftCount, awaitingReviewCount, thisWeekItems
   };
 
   return <MeridianContext.Provider value={value}>{children}</MeridianContext.Provider>;
